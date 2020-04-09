@@ -49,7 +49,7 @@ export class OpendistroSecurityPlugin
 
     const router = core.http.createRouter();
 
-    const securityClient: IClusterClient = core.elasticsearch.createClient(
+    const esClient: IClusterClient = core.elasticsearch.createClient(
       'opendistro_security',
       {
         plugins: [
@@ -67,22 +67,21 @@ export class OpendistroSecurityPlugin
 
     
     // Register server side APIs
-    defineRoutes(router, securityClient);
+    defineRoutes(router, esClient);
 
     // test routes
-    defineTestRoutes(router, securityClient, securitySessionStorageFactory, core);
-    
+    defineTestRoutes(router, esClient, securitySessionStorageFactory, core);
 
     // setup auth
     if (config.auth.type === undefined || config.auth.type === '' || config.auth.type === 'basicauth') {
       // TODO: switch implementation according to configurations
-      const auth = new BasicAuthentication(config, securitySessionStorageFactory, router, securityClient, core);
+      const auth = new BasicAuthentication(config, securitySessionStorageFactory, router, esClient, core);
       core.http.registerAuth(auth.authHandler);
     }
 
     return {
       config$,
-      securityConfigClient: securityClient,
+      securityConfigClient: esClient,
     };
   }
 

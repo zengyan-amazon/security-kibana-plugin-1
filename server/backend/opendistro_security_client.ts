@@ -67,4 +67,37 @@ export class SecurityClient {
     }
   }
 
+  public async authinfo(request: KibanaRequest) {
+    try {
+      return await this.esClient.asScoped(request).callAsCurrentUser('opendistro_security.authinfo');
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
+
+  // Multi-tenancy APIs
+  public async getMultitenancyInfo(request: KibanaRequest) {
+    try {
+      return await this.esClient.asScoped(request).callAsCurrentUser('opendistro_security.multitenancyinfo');
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  public async getTenantInfoWithInternalUser() {
+    try {
+      return this.esClient.callAsInternalUser('opendistro_security.tenantinfo');
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  public async getTenantInfo(request: KibanaRequest) {
+    try {
+      return this.esClient.asScoped(request).callAsCurrentUser('opendistro_security.tenantinfo');
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
 }

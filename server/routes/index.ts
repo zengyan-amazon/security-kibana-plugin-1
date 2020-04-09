@@ -16,7 +16,8 @@
 import { IRouter, IClusterClient } from '../../../../src/core/server';
 import { schema } from '@kbn/config-schema';
 
-export function defineRoutes(router: IRouter, securityConfigClient: IClusterClient) {
+// TODO: conside to extract entity CRUD operations and put it into a client class
+export function defineRoutes(router: IRouter, esClient: IClusterClient) {
   const API_PREFIX: string = '/api/v1/opendistro_security';
 
   const internalUserSchema = schema.object({
@@ -60,7 +61,7 @@ export function defineRoutes(router: IRouter, securityConfigClient: IClusterClie
     let inputSchema;
     switch (resourceName) {
       case 'internalusers': inputSchema = internalUserSchema; break;
-      case 'actiongroups': inputSchema = accountSchema; break;
+      case 'actiongroups': inputSchema = actionGroupSchema; break;
       case 'rolesmapping': inputSchema = roleMappingSchema; break;
       case 'roles': inputSchema = roleSchema; break;
       case 'tenants': inputSchema = tenantSchema; break;
@@ -69,19 +70,6 @@ export function defineRoutes(router: IRouter, securityConfigClient: IClusterClie
     }
     inputSchema.validate(requestBody); // throws error if validation fail
   }
-
-  router.get(
-    {
-      path: '/api/test/security_config',
-      validate: false,
-    },
-    async (context, request, response) => {
-      const esResponse = await securityConfigClient.asScoped(request).callAsCurrentUser('opendistro_security.restapiinfo', { format: 'json' });
-      return response.ok({
-        body: esResponse,
-      });
-    }
-  );
 
   // list resources by resource name
   router.get(
@@ -94,7 +82,7 @@ export function defineRoutes(router: IRouter, securityConfigClient: IClusterClie
       },
     },
     async (context, request, response) => {
-      const client = securityConfigClient.asScoped(request);
+      const client = esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opendistro_security.listResource', { resourceName: request.params.resourceName });
@@ -125,7 +113,7 @@ export function defineRoutes(router: IRouter, securityConfigClient: IClusterClie
       }
     },
     async (context, request, response) => {
-      const client = securityConfigClient.asScoped(request);
+      const client = esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opendistro_security.getResource', { resourceName: request.params.resourceName, id: request.params.id });
@@ -151,7 +139,7 @@ export function defineRoutes(router: IRouter, securityConfigClient: IClusterClie
       }
     },
     async (context, request, response) => {
-      const client = securityConfigClient.asScoped(request);
+      const client = esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opendistro_security.deleteResource', { resourceName: request.params.resourceName, id: request.params.id });
@@ -186,7 +174,7 @@ export function defineRoutes(router: IRouter, securityConfigClient: IClusterClie
       } catch (error) {
         return response.badRequest({ body: error });
       }
-      const client = securityConfigClient.asScoped(request);
+      const client = esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opendistro_security.saveResourceWithoutId', { resourceName: request.params.resourceName, body: request.body });
@@ -222,7 +210,7 @@ export function defineRoutes(router: IRouter, securityConfigClient: IClusterClie
       } catch (error) {
         return response.badRequest({ body: error });
       }
-      const client = securityConfigClient.asScoped(request);
+      const client = esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opendistro_security.saveResource', { resourceName: request.params.resourceName, id: request.params.id, body: request.body });
@@ -246,7 +234,7 @@ export function defineRoutes(router: IRouter, securityConfigClient: IClusterClie
       validate: false,
     },
     async (context, request, response) => {
-      const client = securityConfigClient.asScoped(request);
+      const client = esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opendistro_security.authinfo');
