@@ -17,7 +17,7 @@ import { AuthenticationHandler, SessionStorageFactory, IRouter, IClusterClient }
 import { SecurityPluginConfigType } from "../../..";
 import { SecuritySessionCookie } from "../../../session/security_cookie";
 import { CoreSetup } from "../../../../../../src/core/server";
-import _ from 'lodash';
+import { assign } from 'lodash';
 import { SecurityClient } from '../../../backend/opendistro_security_client';
 import { BasicAuthRoutes } from './routes';
 import { isMultitenantPath, resolveTenant } from '../../../multitenancy/tenant_resolver';
@@ -113,13 +113,13 @@ export class BasicAuthentication {
 
       // pass credentials to request to Elasticsearch
       const credentials = cookie.credentials;
-      _.assign(headers, { authorization: credentials.authHeaderValue });
+      assign(headers, { authorization: credentials.authHeaderValue });
 
       // add tenant to Elasticsearch request headers
       if (this.config.multitenancy.enabled && isMultitenantPath(request)) {
         const authInfo = await this.securityClient.authinfo(request);
         const selectedTenant = resolveTenant(request, authInfo.user_name, authInfo.tenants, this.config, cookie);
-        _.assign(headers, { securitytenant: selectedTenant });
+        assign(headers, { securitytenant: selectedTenant });
         
         if (selectedTenant !== cookie.tentent) {
           cookie.tentent = selectedTenant;

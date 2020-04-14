@@ -1,6 +1,7 @@
 import { KibanaRequest } from '../../../../src/core/server';
 import { SecurityPluginConfigType } from '..';
 import { SecuritySessionCookie } from '../session/security_cookie';
+import { isEmpty, findKey, cloneDeep } from 'lodash';
 
 /**
  * Resovles the tenant the user is using.
@@ -22,8 +23,7 @@ export function resolveTenant(
   username: string,
   availabeTenants: any,
   config: SecurityPluginConfigType,
-  cookie: SecuritySessionCookie,
-  authInfo: any
+  cookie: SecuritySessionCookie
 ): string {
   let selectedTenant: string = undefined;
   if (request.query && ((request.query as any).security_tenant || (request.query as any).securitytenant)) {
@@ -70,10 +70,10 @@ function resolve(
   globalTenantEnabled: boolean,
   privateTenantEnabled: boolean
 ): string {
-  let availableTenantsClone = _.cloneDeep(availableTenants);
+  let availableTenantsClone = cloneDeep(availableTenants);
   delete availableTenantsClone[username];
 
-  if (!globalTenantEnabled && !privateTenantEnabled && _.isEmpty(availableTenantsClone)) {
+  if (!globalTenantEnabled && !privateTenantEnabled && isEmpty(availableTenantsClone)) {
     return undefined;
   }
 
@@ -91,7 +91,7 @@ function resolve(
     }
   }
 
-  if (preferredTenants && !_.isEmpty(preferredTenants)) {
+  if (preferredTenants && !isEmpty(preferredTenants)) {
     for (let element of preferredTenants) {
       const tenant = element.toLowerCase();
 
@@ -118,5 +118,5 @@ function resolve(
   }
 
   // fall back to the first tenant in the available tenants
-  return _.findKey(availableTenantsClone, (value: boolean) => value);
+  return findKey(availableTenantsClone, (value: boolean) => value);
 }
